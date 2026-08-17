@@ -49,26 +49,26 @@ const reviews = [
 
 function FruitDots() {
   const dots = [
-    { label: "S", top: "20%", left: "18%" },
-    { label: "K", top: "14%", left: "62%" },
-    { label: "B", top: "60%", left: "76%" },
-    { label: "C", top: "66%", left: "24%" },
+    { label: "S", top: "22%", left: "20%" },
+    { label: "K", top: "16%", left: "58%" },
+    { label: "B", top: "58%", left: "72%" },
+    { label: "C", top: "64%", left: "26%" },
   ];
   return (
     <div className="pointer-events-none absolute inset-0">
       {dots.map((d, i) => (
         <div key={i} className="absolute" style={{ top: d.top, left: d.left }}>
           <div
-            className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            className="rounded-full opacity-0 group-hover:opacity-100 transition-transform transition-opacity duration-300 group-hover:scale-125"
             style={{ width: 20, height: 20, background: "rgba(255,255,255,0.7)", transitionTimingFunction: "cubic-bezier(0.4,0,0.2,1)" }}
           />
           <div
-            className="absolute -top-1 left-1/2 -translate-x-1/2 translate-y-0 opacity-0 group-hover:opacity-100 group-hover:-translate-y-2 transition-[transform,opacity,box-shadow] duration-200"
+            className="absolute -top-1 left-1/2 -translate-x-1/2 translate-y-0 opacity-0 group-hover:opacity-100 group-hover:-translate-y-2 transition-[transform,opacity] duration-200"
             style={{
               width: 32, height: 32, borderRadius: "50%", background: "var(--accent)", color: "#fff",
               fontFamily: "var(--font-body)", fontSize: 10, fontWeight: 500, letterSpacing: "0.08em",
               textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center",
-              transitionTimingFunction: "ease-out",
+              transitionTimingFunction: "ease-out", boxShadow: "var(--shadow-sm)",
             }}
           >
             {d.label}
@@ -107,8 +107,9 @@ function ProductContent() {
   const [size, setSize] = useState(sizePills[1]);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
-  const [buying, setBuying] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -150,341 +151,398 @@ function ProductContent() {
 
   const handleBuyNow = () => {
     addItem({ id: `${matched.id}-${size}`, name: `${displayName} (${size})`, price: finalPrice, quantity: qty, image: displayImg });
-    setBuying(true);
     router.push("/checkout");
   };
 
+  const scrollToBuy = () => document.getElementById("buy")?.scrollIntoView({ behavior: "smooth" });
+
   const recs = products.filter((p) => p.name !== displayName).slice(0, 3);
 
+  const blush = "color-mix(in srgb, var(--accent) 8%, var(--bg))";
+  const softTint = "color-mix(in srgb, var(--primary) 4%, var(--bg))";
+  const railTint = "color-mix(in srgb, var(--accent) 6%, var(--bg))";
+
   return (
-    <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
-      <style>{`
-        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
-        .reveal.will-reveal { opacity: 0; transform: translateY(24px); }
-        .reveal.visible { opacity: 1; transform: translateY(0); }
-        .rail::-webkit-scrollbar { display: none; }
-        .rail { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+    <div style={{ background: "var(--bg)", minHeight: "100vh", fontFamily: "var(--font-body)" }}>
       <Navbar />
 
-      {/* Breadcrumb / back */}
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "16px 24px 0" }}>
+      {/* ================= HERO — FULL_BLEED_OVERLAY ================= */}
+      <section className="reveal" style={{ position: "relative", width: "100%", height: "92vh", minHeight: 560, overflow: "hidden" }}>
         <button
           onClick={() => router.push("/shop")}
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontFamily: "var(--font-body)", fontSize: 14, whiteSpace: "nowrap" }}
+          style={{
+            position: "absolute", top: 24, left: 24, zIndex: 10, display: "inline-flex", alignItems: "center", gap: 6,
+            background: "rgba(255,255,255,0.85)", border: "none", borderRadius: "var(--radius-pill)", padding: "8px 18px",
+            cursor: "pointer", color: "var(--text)", fontFamily: "var(--font-body)", fontSize: 13, fontWeight: 600,
+            boxShadow: "var(--shadow-sm)", transition: "transform 0.15s ease",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
           Back to Shop
         </button>
-      </div>
 
-      {/* Two column product detail */}
-      <section className="reveal" style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 24px 0" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 48, alignItems: "start" }}>
-          {/* Image column */}
-          <div style={{ position: "sticky", top: 100 }}>
-            <div
-              className="group"
-              style={{
-                position: "relative",
-                overflow: "hidden",
-                borderRadius: "var(--radius-lg)",
-                background: "var(--bg)",
-                boxShadow: "var(--shadow-md)",
-                aspectRatio: "4/5",
-              }}
-            >
-              <img
-                src={displayImg}
-                alt={displayName}
-                style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.6s ease" }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              />
-              <FruitDots />
-            </div>
-            <p style={{ marginTop: 16, fontFamily: "var(--font-body)", fontSize: 14, color: "var(--muted)" }}>
-              Hover the photo to see the fresh fruits used inside.
-            </p>
-          </div>
-
-          {/* Info column */}
-          <div>
-            <span style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--primary)" }}>
-              Celebration Cakes
-            </span>
-            <h1
-              style={{
-                fontFamily: "var(--font-heading)",
-                fontWeight: 700,
-                fontSize: "clamp(2rem,4.5vw,3.2rem)",
-                letterSpacing: "-0.02em",
-                lineHeight: 1.1,
-                color: "var(--text)",
-                marginTop: 12,
-              }}
-            >
-              {displayName}
-            </h1>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: 16, lineHeight: 1.65, color: "var(--muted)", marginTop: 16, maxWidth: 480 }}>
-              {matched.description}
-            </p>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 20 }}>
-              <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "1.75rem", color: "var(--primary)" }}>
-                ₹{finalPrice.toLocaleString("en-IN")}
-              </span>
-              <span style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--muted)" }}>incl. all taxes</span>
-            </div>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-body)", marginTop: 16 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Stars count={5} /> 4.8 (312 reviews)</span>
-              <span>Baked fresh, same-day</span>
-              <span>Free delivery above ₹999</span>
-            </div>
-
-            {/* Size selector */}
-            <div style={{ marginTop: 32 }}>
-              <span style={{ fontFamily: "var(--font-body)", fontSize: 13, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text)" }}>Size</span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12 }}>
-                {sizePills.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSize(s)}
-                    style={{
-                      height: 44,
-                      padding: "0 20px",
-                      borderRadius: "var(--radius-pill)",
-                      fontFamily: "var(--font-body)",
-                      fontSize: 15,
-                      fontWeight: 500,
-                      whiteSpace: "nowrap",
-                      cursor: "pointer",
-                      background: size === s ? "var(--primary)" : "var(--surface)",
-                      color: size === s ? "#fff" : "var(--text)",
-                      border: size === s ? "none" : "1px solid color-mix(in srgb, var(--muted) 30%, transparent)",
-                      transition: "transform 0.15s ease",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quantity */}
-            <div style={{ marginTop: 28 }}>
-              <span style={{ fontFamily: "var(--font-body)", fontSize: 13, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text)" }}>Quantity</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 12 }}>
-                <button
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  style={{ width: 40, height: 40, borderRadius: "var(--radius-md)", border: "1px solid color-mix(in srgb, var(--muted) 30%, transparent)", background: "var(--surface)", color: "var(--text)", fontSize: 18, cursor: "pointer" }}
-                  onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.95)")}
-                  onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                >
-                  −
-                </button>
-                <span style={{ fontFamily: "var(--font-body)", fontSize: 18, fontWeight: 600, color: "var(--text)", minWidth: 24, textAlign: "center" }}>{qty}</span>
-                <button
-                  onClick={() => setQty((q) => q + 1)}
-                  style={{ width: 40, height: 40, borderRadius: "var(--radius-md)", border: "1px solid color-mix(in srgb, var(--muted) 30%, transparent)", background: "var(--surface)", color: "var(--text)", fontSize: 18, cursor: "pointer" }}
-                  onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.95)")}
-                  onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            {/* CTAs (hidden on mobile, shown as sticky bar there) */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 32, maxWidth: 420 }}>
-              <button
-                onClick={handleAddToCart}
-                style={{
-                  height: 56,
-                  borderRadius: "var(--radius-md)",
-                  background: added ? "var(--accent)" : "var(--primary)",
-                  color: "#fff",
-                  fontFamily: "var(--font-body)",
-                  fontSize: 17,
-                  fontWeight: 600,
-                  border: "none",
-                  cursor: "pointer",
-                  boxShadow: "var(--shadow-sm)",
-                  transition: "transform 0.15s ease, background 0.2s ease",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              >
-                {added ? "✓ Added to Bag" : "Add to Cart"}
-              </button>
-              <button
-                onClick={handleBuyNow}
-                style={{
-                  height: 56,
-                  borderRadius: "var(--radius-md)",
-                  background: "transparent",
-                  color: "var(--text)",
-                  border: "2px solid var(--text)",
-                  fontFamily: "var(--font-body)",
-                  fontSize: 17,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  boxShadow: "none",
-                  transition: "transform 0.15s ease",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              >
-                {buying ? "Redirecting…" : "Buy Now"}
-              </button>
-            </div>
-
-            {/* Specs */}
-            {matched.specs.length > 0 && (
-              <div style={{ marginTop: 40 }}>
-                <span style={{ fontFamily: "var(--font-body)", fontSize: 13, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text)" }}>
-                  Details
-                </span>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: "0px 24px", marginTop: 16 }}>
-                  {matched.specs.map((s, i) => (
-                    <div key={i} style={{ padding: "12px 0", borderBottom: "1px solid color-mix(in srgb, var(--muted) 20%, transparent)" }}>
-                      <div style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.label}</div>
-                      <div style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "var(--text)", fontWeight: 500, marginTop: 4 }}>{s.value}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+        <div className="group" style={{ position: "absolute", inset: 0 }}>
+          <img
+            src={displayImg}
+            alt={displayName}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+          <FruitDots />
         </div>
-      </section>
 
-      {/* Reviews */}
-      <section className="reveal" id="reviews" style={{ maxWidth: 1280, margin: "0 auto", padding: "var(--space-section) 24px" }}>
-        <span style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--primary)" }}>
-          What customers say
-        </span>
-        <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(1.8rem,3vw,2.5rem)", letterSpacing: "-0.02em", color: "var(--text)", marginTop: 12 }}>
-          Loved for its freshness
-        </h2>
-        <div style={{ marginTop: 32, display: "flex", flexDirection: "column" }}>
-          {reviews.map((r, i) => (
-            <div key={i} style={{ padding: "24px 0", borderBottom: i < reviews.length - 1 ? "1px solid color-mix(in srgb, var(--muted) 20%, transparent)" : "none" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <Stars count={r.rating} />
-                <span style={{ fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{r.name}</span>
-                <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--muted)" }}>· {r.city}</span>
-              </div>
-              <p style={{ fontFamily: "var(--font-body)", fontSize: 15, lineHeight: 1.65, color: "var(--muted)", maxWidth: 640 }}>{r.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,15,15,0.82) 0%, rgba(15,15,15,0.45) 32%, rgba(15,15,15,0) 62%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(15,15,15,0.35) 0%, rgba(15,15,15,0) 45%)" }} />
 
-      {/* You might also like */}
-      <section className="reveal" style={{ background: "var(--surface)", padding: "var(--space-section) 0" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
-          <span style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--primary)" }}>
-            More to celebrate with
+        <div style={{ position: "absolute", left: "6%", right: "6%", bottom: "7%", maxWidth: 700 }}>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)" }}>
+            Celebration Cakes
           </span>
-          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(1.8rem,3vw,2.5rem)", letterSpacing: "-0.02em", color: "var(--text)", marginTop: 12, marginBottom: 32 }}>
-            You Might Also Like
-          </h2>
-          <div className="rail" style={{ display: "flex", gap: 24, overflowX: "auto", scrollSnapType: "x mandatory", paddingBottom: 8 }}>
-            {recs.map((p) => (
-              <article
-                key={p.id}
-                className="group"
-                onClick={() => router.push(`/product?name=${encodeURIComponent(p.name)}&price=${p.price}&img=${encodeURIComponent(p.img)}`)}
-                style={{ flex: "0 0 auto", width: 280, scrollSnapAlign: "start", cursor: "pointer" }}
-              >
-                <div style={{ position: "relative", overflow: "hidden", borderRadius: "var(--radius-md)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
-                  <img
-                    src={p.img}
-                    alt={p.name}
-                    style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", transition: "transform 0.6s ease" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                  />
-                  <FruitDots />
-                </div>
-                <h3 style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 18, color: "var(--text)", marginTop: 16 }}>{p.name}</h3>
-                <p style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 20, color: "var(--primary)", marginTop: 8 }}>₹{p.price.toLocaleString("en-IN")}</p>
+          <h1
+            style={{
+              fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "clamp(3rem,6vw,5.5rem)",
+              letterSpacing: "-0.02em", lineHeight: 1.02, color: "#fff", marginTop: 10,
+            }}
+          >
+            {displayName}
+          </h1>
+          <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 16, lineHeight: 1.6, maxWidth: 460, marginTop: 14 }}>
+            {matched.description}
+          </p>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", fontSize: 13.5, color: "rgba(255,255,255,0.85)", marginTop: 18 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Stars count={5} /> 4.8 (312 reviews)</span>
+            <span>Baked fresh, same-day</span>
+            <span>Free delivery above ₹999</span>
+          </div>
+
+          <button
+            onClick={scrollToBuy}
+            style={{
+              marginTop: 26, height: 56, padding: "0 40px", borderRadius: "var(--radius-pill)", border: "none",
+              cursor: "pointer", background: "var(--accent)", color: "#fff", fontWeight: 600, fontSize: 16,
+              boxShadow: "var(--glow)", transition: "transform 0.15s ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            Order Your Cake
+          </button>
+        </div>
+      </section>
+
+      {/* ================= BUY BOX — ASYMMETRIC_SPLIT ================= */}
+      <section id="buy" className="reveal grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-10 md:gap-12 items-start" style={{ maxWidth: 1280, margin: "0 auto", padding: "var(--space-section) 24px" }}>
+        <div className="group" style={{ position: "relative", overflow: "hidden", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-md)" }}>
+          <img
+            src={displayImg}
+            alt={displayName}
+            style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", transition: "transform 0.6s ease" }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          />
+          <FruitDots />
+          <span style={{ position: "absolute", bottom: 14, left: 14, background: "rgba(15,15,15,0.55)", color: "#fff", fontSize: 12, padding: "6px 12px", borderRadius: "var(--radius-pill)", fontFamily: "var(--font-body)" }}>
+            Hover to spot the fresh fruit
+          </span>
+        </div>
+
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "1.9rem", color: "var(--primary)" }}>
+              ₹{finalPrice.toLocaleString("en-IN")}
+            </span>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--muted)" }}>incl. all taxes</span>
+          </div>
+
+          <div style={{ marginTop: 28 }}>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text)" }}>Size</span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12 }}>
+              {sizePills.map((s) => (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(`/product?name=${encodeURIComponent(p.name)}&price=${p.price}&img=${encodeURIComponent(p.img)}`);
-                  }}
+                  key={s}
+                  onClick={() => setSize(s)}
                   style={{
-                    marginTop: 12,
-                    height: 40,
-                    width: "100%",
-                    borderRadius: "var(--radius-sm)",
-                    background: "transparent",
-                    color: "var(--primary)",
-                    border: "1px solid var(--primary)",
-                    fontFamily: "var(--font-body)",
-                    fontSize: 14,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                    transition: "transform 0.15s ease",
+                    height: 44, padding: "0 20px", borderRadius: "var(--radius-pill)", fontFamily: "var(--font-body)",
+                    fontSize: 15, fontWeight: 500, whiteSpace: "nowrap", cursor: "pointer",
+                    background: size === s ? "var(--primary)" : "var(--surface)",
+                    color: size === s ? "#fff" : "#fff",
+                    opacity: size === s ? 1 : 0.85,
+                    border: "none", transition: "transform 0.15s ease",
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
                   onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
                 >
-                  View Details
+                  {s}
                 </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginTop: 26 }}>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text)" }}>Quantity</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 12 }}>
+              <button
+                onClick={() => setQty((q) => Math.max(1, q - 1))}
+                style={{ width: 40, height: 40, borderRadius: "var(--radius-pill)", border: "1px solid color-mix(in srgb, var(--muted) 40%, transparent)", background: "var(--bg)", color: "var(--text)", fontSize: 18, cursor: "pointer" }}
+                onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.95)")}
+                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+              >
+                −
+              </button>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: 18, fontWeight: 600, color: "var(--text)", minWidth: 24, textAlign: "center" }}>{qty}</span>
+              <button
+                onClick={() => setQty((q) => q + 1)}
+                style={{ width: 40, height: 40, borderRadius: "var(--radius-pill)", border: "1px solid color-mix(in srgb, var(--muted) 40%, transparent)", background: "var(--bg)", color: "var(--text)", fontSize: 18, cursor: "pointer" }}
+                onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.95)")}
+                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 14, marginTop: 32, flexWrap: "wrap" }}>
+            <button
+              onClick={handleAddToCart}
+              style={{
+                height: 54, padding: "0 30px", borderRadius: "var(--radius-pill)", border: "1.5px solid var(--primary)",
+                background: "transparent", color: "var(--primary)", fontWeight: 600, fontSize: 15, cursor: "pointer",
+                transition: "transform 0.15s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              {added ? "✓ Added" : "Add to Cart"}
+            </button>
+            <button
+              onClick={handleBuyNow}
+              style={{
+                height: 54, padding: "0 36px", borderRadius: "var(--radius-pill)", border: "none",
+                background: "var(--accent)", color: "#fff", fontWeight: 600, fontSize: 15, cursor: "pointer",
+                boxShadow: "var(--shadow-lg)", transition: "transform 0.15s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              Buy Now
+            </button>
+          </div>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 18, marginTop: 24, fontSize: 13, color: "var(--muted)" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Stars count={5} /> 4.8 (312)</span>
+            <span>Made fresh in India</span>
+            <span>Eggless option available</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= STORY_SPLIT — ASYMMETRIC_SPLIT (image bleeds right) ================= */}
+      <section id="story" className="reveal" style={{ background: blush, padding: "var(--space-section) 0" }}>
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] items-center" style={{ maxWidth: 1280, margin: "0 auto" }}>
+          <div style={{ padding: "0 24px", position: "relative", zIndex: 2 }}>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)" }}>
+              Our Craft
+            </span>
+            <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: "clamp(1.8rem,3vw,2.8rem)", letterSpacing: "-0.015em", color: "var(--text)", marginTop: 10, lineHeight: 1.15 }}>
+              Layered by hand, finished with fruit picked at its peak.
+            </h2>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--muted)", marginTop: 16, maxWidth: 380 }}>
+              Every cake starts a day before it leaves our kitchen — sponge baked to order, cream whipped fresh, and fruit sliced only hours before delivery so it never tastes like it's been sitting around.
+            </p>
+            <button
+              onClick={() => document.getElementById("ingredients")?.scrollIntoView({ behavior: "smooth" })}
+              style={{
+                marginTop: 22, height: 50, padding: "0 30px", borderRadius: "var(--radius-pill)", border: "none",
+                background: "var(--primary)", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer",
+                boxShadow: "var(--shadow-md)", transition: "transform 0.15s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              See the Ingredients
+            </button>
+          </div>
+          <div style={{ overflow: "hidden", borderRadius: "var(--radius-lg) 0 0 var(--radius-lg)", marginTop: isMobile ? 32 : 0, marginRight: isMobile ? 0 : "-8%", boxShadow: "var(--shadow-lg)" }}>
+            <img
+              src="/product-3.jpg"
+              alt="Cake being layered by hand"
+              style={{ width: "100%", aspectRatio: isMobile ? "4/3" : "16/10", objectFit: "cover", transition: "transform 0.7s ease" }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.04)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ================= INGREDIENT_CLOSEUP — OVERLAP_BREAKOUT ================= */}
+      <section id="ingredients" className="reveal" style={{ background: softTint, padding: "var(--space-section) 24px", position: "relative" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)" }}>
+            Straight From the Fruit Bowl
+          </span>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: "clamp(1.8rem,3vw,2.8rem)", letterSpacing: "-0.015em", color: "var(--text)", marginTop: 10, maxWidth: 560 }}>
+            Strawberry, kiwi, blueberry, cherry — nothing frozen, nothing canned.
+          </h2>
+
+          <div style={{ position: "relative", marginTop: 48, height: isMobile ? 340 : 420 }}>
+            <div style={{ position: "absolute", left: 0, top: 0, width: isMobile ? "70%" : "56%", overflow: "hidden", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-lg)" }}>
+              <img src="/product-1.jpg" alt="Fresh fruit close-up on cake" style={{ width: "100%", aspectRatio: "5/4", objectFit: "cover" }} />
+            </div>
+            <div style={{ position: "absolute", right: 0, bottom: 0, width: isMobile ? "56%" : "40%", overflow: "hidden", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-xl)", border: "6px solid var(--bg)" }}>
+              <img src="/product-4.jpg" alt="Caramel and fruit detail" style={{ width: "100%", aspectRatio: "4/5", objectFit: "cover" }} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ marginTop: 64 }}>
+            {[
+              { t: "100% Fresh Fruit", d: "Sourced each morning, never frozen or tinned." },
+              { t: "Baked to Order", d: "No shelf cakes — yours is baked the day you order." },
+              { t: "Eggless Available", d: "Every flavour can be made egg-free on request." },
+            ].map((f, i) => (
+              <div key={i} style={{ padding: "20px 4px" }}>
+                <div style={{ width: 40, height: 40, borderRadius: "var(--radius-pill)", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-heading)", fontWeight: 700 }}>
+                  {i + 1}
+                </div>
+                <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 18, color: "var(--text)", marginTop: 14 }}>{f.t}</h3>
+                <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.6, marginTop: 6 }}>{f.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= YOU MIGHT ALSO LIKE — BENTO_MOSAIC ================= */}
+      <section className="reveal" style={{ padding: "var(--space-section) 24px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)" }}>
+            More to Celebrate With
+          </span>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: "clamp(1.8rem,3vw,2.8rem)", letterSpacing: "-0.015em", color: "var(--text)", marginTop: 10 }}>
+            You Might Also Like
+          </h2>
+
+          <div className="grid grid-cols-4 gap-4" style={{ marginTop: 36, gridAutoRows: 220 }}>
+            {recs.map((p, i) => (
+              <article
+                key={p.id}
+                className={i === 0 ? "col-span-4 md:col-span-2 md:row-span-2" : "col-span-4 md:col-span-2"}
+                style={{ position: "relative", overflow: "hidden", borderRadius: "var(--radius-lg)", cursor: "pointer", boxShadow: "var(--shadow-md)", transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s cubic-bezier(0.4,0,0.2,1)" }}
+                onClick={() => router.push(`/product?name=${encodeURIComponent(p.name)}&price=${p.price}&img=${encodeURIComponent(p.img)}`)}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "var(--shadow-xl)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "var(--shadow-md)"; }}
+              >
+                <img
+                  src={p.img}
+                  alt={p.name}
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.7s ease" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.06)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,15,15,0.7) 0%, rgba(15,15,15,0) 55%)" }} />
+                <div style={{ position: "absolute", left: 18, bottom: 16, right: 18 }}>
+                  <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: i === 0 ? "1.3rem" : "1.05rem", color: "#fff" }}>{p.name}</h3>
+                  <p style={{ marginTop: 4, color: "var(--accent)", fontWeight: 600, fontSize: 14 }}>₹{p.price.toLocaleString("en-IN")}</p>
+                </div>
               </article>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ================= REVIEWS — HORIZONTAL_RAIL ================= */}
+      <section className="reveal" style={{ background: railTint, padding: "var(--space-section) 0" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)" }}>
+            Real Orders, Real Words
+          </span>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: "clamp(1.8rem,3vw,2.8rem)", letterSpacing: "-0.015em", color: "var(--text)", marginTop: 10 }}>
+            Loved for Its Freshness
+          </h2>
+
+          <div className="flex gap-5 overflow-x-auto" style={{ marginTop: 32, paddingBottom: 16, scrollbarWidth: "none" as any }}>
+            {reviews.map((r) => (
+              <div
+                key={r.name}
+                className="flex-none"
+                style={{
+                  width: 280, background: "var(--bg)", borderRadius: "var(--radius-lg)", padding: 24,
+                  border: "1px solid color-mix(in srgb, var(--muted) 25%, transparent)", boxShadow: "var(--shadow-sm)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 15, flexShrink: 0 }}>
+                    {r.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14, color: "var(--text)" }}>{r.name}</p>
+                    <p style={{ fontSize: 12, color: "var(--muted)" }}>{r.city}</p>
+                  </div>
+                </div>
+                <div style={{ marginTop: 12 }}><Stars count={r.rating} /></div>
+                <p style={{ fontSize: 13.5, lineHeight: 1.65, color: "var(--muted)", marginTop: 12 }}>{r.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= NEWSLETTER — FULL_BLEED_BAND (dark) ================= */}
+      <section className="reveal" style={{ background: "var(--surface)", padding: "var(--space-section) 24px" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "left" }}>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)" }}>
+            Stay Sweet
+          </span>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: "clamp(1.8rem,3vw,2.6rem)", color: "#fff", marginTop: 10, lineHeight: 1.2 }}>
+            First to know about new flavours and festive drops.
+          </h2>
+          {subscribed ? (
+            <p style={{ marginTop: 20, color: "var(--accent)", fontWeight: 600 }}>✓ You're on the list — see you in your inbox.</p>
+          ) : (
+            <form
+              onSubmit={(e) => { e.preventDefault(); if (email) setSubscribed(true); }}
+              className="flex flex-col sm:flex-row gap-3"
+              style={{ marginTop: 24, maxWidth: 460 }}
+            >
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                style={{
+                  flex: 1, height: 52, padding: "0 18px", borderRadius: "var(--radius-pill)", border: "1px solid rgba(255,255,255,0.25)",
+                  background: "rgba(255,255,255,0.06)", color: "#fff", fontFamily: "var(--font-body)", fontSize: 14, outline: "none",
+                }}
+              />
+              <button
+                type="submit"
+                style={{
+                  height: 52, padding: "0 30px", borderRadius: "var(--radius-pill)", border: "none", background: "var(--accent)",
+                  color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", boxShadow: "var(--shadow-lg)", transition: "transform 0.15s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+              >
+                Subscribe
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
+
       <Footer />
 
-      {/* Sticky mobile bar */}
+      {/* Sticky mobile add-to-cart bar */}
       {isMobile && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: "12px 20px",
-            background: "var(--bg)",
-            borderTop: "1px solid color-mix(in srgb, var(--muted) 30%, transparent)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            zIndex: 50,
-          }}
-        >
-          <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "1.1rem", color: "var(--text)", whiteSpace: "nowrap" }}>
-            ₹{finalPrice.toLocaleString("en-IN")}
-          </span>
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: "14px 20px", background: "var(--bg)", borderTop: "1px solid color-mix(in srgb, var(--muted) 30%, transparent)", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 50, boxShadow: "var(--shadow-lg)" }}>
+          <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "1.15rem", color: "var(--text)" }}>₹{finalPrice.toLocaleString("en-IN")}</span>
           <button
             onClick={handleAddToCart}
-            style={{
-              flex: 1,
-              maxWidth: 220,
-              height: 48,
-              borderRadius: "var(--radius-md)",
-              border: "none",
-              background: added ? "var(--accent)" : "var(--primary)",
-              color: "#fff",
-              fontFamily: "var(--font-body)",
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
+            style={{ padding: "12px 28px", borderRadius: "var(--radius-pill)", border: "none", background: "var(--accent)", color: "#fff", fontWeight: 600, cursor: "pointer" }}
           >
-            {added ? "✓ Added to Bag" : "Add to Cart"}
+            {added ? "✓ Added" : "Add to Cart"}
           </button>
         </div>
       )}
